@@ -2,7 +2,7 @@
 
 A browser-based multiplayer-style snake game inspired by slither.io.
 
-## [▶ PLAY NOW](https://matteensekander.github.io/willbussy.io/)
+## [▶ PLAY NOW](https://willbussyio.vercel.app)
 
 ---
 
