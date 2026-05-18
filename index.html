@@ -279,6 +279,8 @@ let rafId, lastT = 0;
 
 // ─── INPUT ───────────────────────────────────────────────────
 gc.addEventListener('mousemove', e => { mpos.x = e.clientX; mpos.y = e.clientY; });
+gc.addEventListener('mousedown', e => { if(e.button===0) spaceDown=true; });
+gc.addEventListener('mouseup',   e => { if(e.button===0) spaceDown=false; });
 const GAME_KEYS = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight','Space','ShiftLeft','ShiftRight']);
 document.addEventListener('keydown', e => {
   if(gstate==='playing' && GAME_KEYS.has(e.code)) e.preventDefault();
