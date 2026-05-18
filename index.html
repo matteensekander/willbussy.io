@@ -272,11 +272,13 @@ let pups    = [];
 let parts   = [];
 let popups  = [];
 let cam     = { x:0, y:0 };
+let mpos    = { x:0, y:0 };
 let keys    = {};
 let spaceDown = false;
 let rafId, lastT = 0;
 
 // ─── INPUT ───────────────────────────────────────────────────
+gc.addEventListener('mousemove', e => { mpos.x = e.clientX; mpos.y = e.clientY; });
 const GAME_KEYS = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight','Space','ShiftLeft','ShiftRight']);
 document.addEventListener('keydown', e => {
   if(gstate==='playing' && GAME_KEYS.has(e.code)) e.preventDefault();
@@ -511,12 +513,19 @@ class Snake {
   }
 
   _playerSteer(){
-    let dx=0, dy=0;
-    if(keys['KeyD']||keys['ArrowRight']) dx+=1;
-    if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
-    if(keys['KeyS']||keys['ArrowDown'])  dy+=1;
-    if(keys['KeyW']||keys['ArrowUp'])    dy-=1;
-    if(dx!==0||dy!==0) this.tAngle=Math.atan2(dy,dx);
+    const wasdActive = keys['KeyD']||keys['ArrowRight']||keys['KeyA']||keys['ArrowLeft']||keys['KeyS']||keys['ArrowDown']||keys['KeyW']||keys['ArrowUp'];
+    if(wasdActive){
+      let dx=0, dy=0;
+      if(keys['KeyD']||keys['ArrowRight']) dx+=1;
+      if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
+      if(keys['KeyS']||keys['ArrowDown'])  dy+=1;
+      if(keys['KeyW']||keys['ArrowUp'])    dy-=1;
+      if(dx!==0||dy!==0) this.tAngle=Math.atan2(dy,dx);
+    } else {
+      // Mouse fallback
+      const dx=mpos.x-gc.width/2, dy=mpos.y-gc.height/2;
+      if(Math.abs(dx)>4||Math.abs(dy)>4) this.tAngle=Math.atan2(dy,dx);
+    }
   }
 
   _aiSteer(){
@@ -532,22 +541,27 @@ class Snake {
 
     this.aiCD--;
     if(this.aiCD>0) return;
-    this.aiCD = rint(8,22); // fast decisions
+    this.aiCD = rint(14,32); // slower reaction — easier to kill
 
     const hasPlayer = player && player.alive;
     const dp = hasPlayer ? dst(h,player.head) : Infinity;
 
-    // ── Danger check: dodge nearby snake bodies ───────────────
+    // ── Danger check: dodge nearby bodies ─────────────────────
+    // Hunters skip this when actively chasing — they're committed
+    // Also a 35% random chance to completely miss the dodge
+    const canDodge = this.personality!=='hunter' || !this.chasing;
     let dodging=false;
-    for(const other of snakes){
-      if(!other.alive||other===this) continue;
-      for(let i=0;i<other.segs.length;i+=3){
-        if(dst(h,other.segs[i])<55){
-          this.tAngle=Math.atan2(h.y-other.segs[i].y, h.x-other.segs[i].x)+rnd(-0.4,0.4);
-          dodging=true; break;
+    if(canDodge && Math.random()>0.35){
+      for(const other of snakes){
+        if(!other.alive||other===this) continue;
+        for(let i=0;i<other.segs.length;i+=3){
+          if(dst(h,other.segs[i])<38){ // reduced from 55 → closer before they react
+            this.tAngle=Math.atan2(h.y-other.segs[i].y, h.x-other.segs[i].x)+rnd(-0.5,0.5);
+            dodging=true; break;
+          }
         }
+        if(dodging) break;
       }
-      if(dodging) break;
     }
     if(dodging){ this.chasing=false; return; }
 
