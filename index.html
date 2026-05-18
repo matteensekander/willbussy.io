@@ -422,7 +422,7 @@ class Snake {
     this.angle=lerpAng(this.angle,this.tAngle,TURN);
 
     const now2=Date.now();
-    const boost = this.isPlayer && spaceDown;
+    const boost = this.isPlayer && spaceDown && this.len > 20;
 
     // ── Dash logic ────────────────────────────────────────────
     if(this.isPlayer){
