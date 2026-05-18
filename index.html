@@ -686,12 +686,12 @@ class Snake {
   die(){
     if(!this.alive) return;
     this.alive=false;
-    const drop=Math.min(Math.floor(this.len/3),90);
+    const drop=Math.min(Math.floor(this.len/6),40);
     for(let i=0;i<drop;i++){
       const seg=this.segs[rint(0,this.segs.length-1)];
       const o=new Orb(true);
       o.x=seg.x+rnd(-25,25); o.y=seg.y+rnd(-25,25);
-      o.val=3; o.r=rnd(7,12); o.hue=rint(80,160);
+      o.val=1; o.r=rnd(6,10); o.hue=rint(80,160);
       orbs.push(o);
     }
     for(let i=0;i<Math.min(this.segs.length,25);i++)
