@@ -265,7 +265,7 @@ resize(); addEventListener('resize', resize);
 // ─── SKINS ───────────────────────────────────────────────────
 const SKINS = {
   neon:   { grad:['#00ffff','#0088ff','#00ffaa'], glow:'#00ffcc', icon:'⚡', label:'NEON',   bg:'linear-gradient(135deg,#001133,#002255)' },
-  fire:   { grad:['#ff1100','#ff6600','#ffcc00'], glow:'#ff4400', icon:'🔥', label:'FIRE',   bg:'linear-gradient(135deg,#330000,#661100)' },
+  ogre:   { grad:['#4e8a2a','#6ab83a','#3a6620'], glow:'#7edd44', icon:'🧅', label:'OGRE',   bg:'linear-gradient(135deg,#0e1a08,#1a3010)' },
   galaxy: { grad:['#7700ff','#cc44ff','#ff00cc'], glow:'#aa22ff', icon:'🌌', label:'GALAXY', bg:'linear-gradient(135deg,#110033,#220055)' },
   ocean:  { grad:['#0077ff','#00aaff','#00ffee'], glow:'#00aaff', icon:'🌊', label:'OCEAN',  bg:'linear-gradient(135deg,#001122,#002244)' },
   venom:  { grad:['#44ff00','#aaff00','#ffff00'], glow:'#66ff00', icon:'☠️', label:'VENOM',  bg:'linear-gradient(135deg,#001100,#003300)' },
@@ -741,29 +741,67 @@ class Snake {
       gx.beginPath(); gx.arc(s.x,s.y,r,0,Math.PI*2); gx.fill();
     }
 
-    // Eyes
+    // Eyes + special faces
     if(onScreen(this.head.x,this.head.y,SEG_R*2)){
       const hs=toScreen(this.head.x,this.head.y);
-      const ea1=this.angle-0.48, ea2=this.angle+0.48, eo=SEG_R*0.38;
-      gx.shadowBlur=0; gx.fillStyle='#fff';
-      gx.beginPath();
-      gx.arc(hs.x+Math.cos(ea1)*eo,hs.y+Math.sin(ea1)*eo,3.2,0,Math.PI*2);
-      gx.arc(hs.x+Math.cos(ea2)*eo,hs.y+Math.sin(ea2)*eo,3.2,0,Math.PI*2);
-      gx.fill();
-      gx.fillStyle='#111';
-      gx.beginPath();
-      gx.arc(hs.x+Math.cos(ea1)*eo+0.8,hs.y+Math.sin(ea1)*eo+0.8,1.6,0,Math.PI*2);
-      gx.arc(hs.x+Math.cos(ea2)*eo+0.8,hs.y+Math.sin(ea2)*eo+0.8,1.6,0,Math.PI*2);
-      gx.fill();
+      gx.shadowBlur=0;
+
+      if(this.skin==='ogre'){
+        // ── Shrek face ─────────────────────────────────────────
+        const hr=SEG_R;
+        // Cylinder ears (the iconic Shrek tubes)
+        gx.fillStyle='#4a7a24';
+        gx.beginPath(); gx.ellipse(hs.x-hr*0.88,hs.y-hr*0.52, hr*0.26,hr*0.44, -0.12, 0,Math.PI*2); gx.fill();
+        gx.beginPath(); gx.ellipse(hs.x+hr*0.88,hs.y-hr*0.52, hr*0.26,hr*0.44,  0.12, 0,Math.PI*2); gx.fill();
+        // Ear rims
+        gx.fillStyle='#3a5e1a';
+        gx.beginPath(); gx.ellipse(hs.x-hr*0.88,hs.y-hr*0.82, hr*0.26,hr*0.14, -0.12, 0,Math.PI*2); gx.fill();
+        gx.beginPath(); gx.ellipse(hs.x+hr*0.88,hs.y-hr*0.82, hr*0.26,hr*0.14,  0.12, 0,Math.PI*2); gx.fill();
+        // Eye whites
+        gx.fillStyle='#dce8c8';
+        gx.beginPath(); gx.ellipse(hs.x-hr*0.33,hs.y-hr*0.22, hr*0.26,hr*0.22, 0,0,Math.PI*2); gx.fill();
+        gx.beginPath(); gx.ellipse(hs.x+hr*0.33,hs.y-hr*0.22, hr*0.26,hr*0.22, 0,0,Math.PI*2); gx.fill();
+        // Pupils
+        gx.fillStyle='#1a1200';
+        gx.beginPath(); gx.arc(hs.x-hr*0.33,hs.y-hr*0.2, hr*0.13, 0,Math.PI*2); gx.fill();
+        gx.beginPath(); gx.arc(hs.x+hr*0.33,hs.y-hr*0.2, hr*0.13, 0,Math.PI*2); gx.fill();
+        // Bulbous nose
+        gx.fillStyle='#4a7824';
+        gx.beginPath(); gx.ellipse(hs.x,hs.y+hr*0.1, hr*0.34,hr*0.27, 0,0,Math.PI*2); gx.fill();
+        gx.fillStyle='#2e4e14';
+        gx.beginPath(); gx.arc(hs.x-hr*0.13,hs.y+hr*0.19, hr*0.1, 0,Math.PI*2); gx.fill();
+        gx.beginPath(); gx.arc(hs.x+hr*0.13,hs.y+hr*0.19, hr*0.1, 0,Math.PI*2); gx.fill();
+        // Smirk
+        gx.strokeStyle='#2e4e14'; gx.lineWidth=hr*0.13; gx.lineCap='round';
+        gx.beginPath();
+        gx.moveTo(hs.x-hr*0.28, hs.y+hr*0.5);
+        gx.quadraticCurveTo(hs.x+hr*0.08, hs.y+hr*0.66, hs.x+hr*0.28, hs.y+hr*0.48);
+        gx.stroke();
+      } else {
+        // Normal eyes
+        const ea1=this.angle-0.48, ea2=this.angle+0.48, eo=SEG_R*0.38;
+        gx.fillStyle='#fff';
+        gx.beginPath();
+        gx.arc(hs.x+Math.cos(ea1)*eo,hs.y+Math.sin(ea1)*eo,3.2,0,Math.PI*2);
+        gx.arc(hs.x+Math.cos(ea2)*eo,hs.y+Math.sin(ea2)*eo,3.2,0,Math.PI*2);
+        gx.fill();
+        gx.fillStyle='#111';
+        gx.beginPath();
+        gx.arc(hs.x+Math.cos(ea1)*eo+0.8,hs.y+Math.sin(ea1)*eo+0.8,1.6,0,Math.PI*2);
+        gx.arc(hs.x+Math.cos(ea2)*eo+0.8,hs.y+Math.sin(ea2)*eo+0.8,1.6,0,Math.PI*2);
+        gx.fill();
+        // Rat face
+        if(this.skin==='rattk'){
+          gx.font=`${~~(SEG_R*2.2)}px Arial`;
+          gx.textAlign='center'; gx.textBaseline='middle';
+          gx.fillText('🐭',hs.x,hs.y);
+        }
+      }
+
+      // Nametag (all skins)
       gx.globalAlpha=1; gx.font='bold 11px Arial'; gx.textAlign='center'; gx.textBaseline='bottom';
       gx.fillStyle='rgba(255,255,255,0.88)'; gx.shadowBlur=0;
-      gx.fillText(this.name,hs.x,hs.y-SEG_R-4);
-      // Rat face on head for RATT K skin
-      if(this.skin==='rattk'){
-        gx.font=`${~~(SEG_R*2.2)}px Arial`;
-        gx.textBaseline='middle'; gx.shadowBlur=0;
-        gx.fillText('🐭',hs.x,hs.y);
-      }
+      gx.fillText(this.name,hs.x,hs.y-SEG_R-(this.skin==='ogre'?13:4));
     }
     gx.restore();
   }
