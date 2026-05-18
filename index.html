@@ -399,6 +399,7 @@ class Snake {
     this._shiftConsumed  = false;
     this._dashWarnCD  = null;
     this.dashTrail    = [];
+    this.shrinkTimer  = 0;
   }
   get head(){ return this.segs[0]; }
   get len() { return this.segs.length; }
@@ -450,13 +451,17 @@ class Snake {
     // ── Move head ─────────────────────────────────────────────
     this.segs.unshift({x:this.head.x+Math.cos(this.angle)*spd, y:this.head.y+Math.sin(this.angle)*spd});
 
-    // ── Shrink ────────────────────────────────────────────────
-    if(this.dashing && this.segs.length>20){
-      this.segs.pop(); this.segs.pop(); this.segs.pop(); // heavy shrink
-    } else if(boost && this.segs.length>14){
-      this.segs.pop(); this.segs.pop();
+    // ── Shrink (slither.io-style: drain 1 extra seg every N frames) ──
+    this.segs.pop(); // always remove tail to hold length
+    if((this.dashing || boost) && this.segs.length > 12){
+      this.shrinkTimer++;
+      const rate = this.dashing ? 4 : 6; // dash drains faster than boost
+      if(this.shrinkTimer >= rate){
+        this.segs.pop();
+        this.shrinkTimer = 0;
+      }
     } else {
-      this.segs.pop();
+      this.shrinkTimer = 0;
     }
 
     // ── Dash trail ────────────────────────────────────────────
