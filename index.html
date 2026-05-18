@@ -270,7 +270,7 @@ const SKINS = {
   ocean:  { grad:['#0077ff','#00aaff','#00ffee'], glow:'#00aaff', icon:'🌊', label:'OCEAN',  bg:'linear-gradient(135deg,#001122,#002244)' },
   venom:  { grad:['#44ff00','#aaff00','#ffff00'], glow:'#66ff00', icon:'☠️', label:'VENOM',  bg:'linear-gradient(135deg,#001100,#003300)' },
   ice:    { grad:['#aaeeff','#66ddff','#ffffff'], glow:'#88eeff', icon:'❄️', label:'ICE',    bg:'linear-gradient(135deg,#001133,#003355)' },
-  gold:   { grad:['#ffcc00','#ff8800','#ffe066'], glow:'#ffcc00', icon:'✨', label:'GOLD',   bg:'linear-gradient(135deg,#221100,#442200)' },
+  rattk:  { grad:['#7a7060','#5c5048','#a09080'], glow:'#ffaabb', icon:'🐭', label:'RATT K',  bg:'linear-gradient(135deg,#1a1510,#2a2018)' },
   shadow: { grad:['#440088','#8800cc','#cc44ff'], glow:'#9900ff', icon:'🌑', label:'SHADOW', bg:'linear-gradient(135deg,#0a0011,#150022)' },
 };
 const AI_NAMES = ['SlimeyBoi','SnekMaster','CoilKing','WormGod','SerpentPro','NoodleLord','ViperrX','ScaleGod','TailWhip','BoaFlex','CobrazZ','AnacondaX','SsssSlayer','VenomByte','ToxicCoil','RingWorm69','NoodleArms','SlitherKing','LengthGang','Ouroboros'];
@@ -753,6 +753,12 @@ class Snake {
       gx.globalAlpha=1; gx.font='bold 11px Arial'; gx.textAlign='center'; gx.textBaseline='bottom';
       gx.fillStyle='rgba(255,255,255,0.88)'; gx.shadowBlur=0;
       gx.fillText(this.name,hs.x,hs.y-SEG_R-4);
+      // Rat face on head for RATT K skin
+      if(this.skin==='rattk'){
+        gx.font=`${~~(SEG_R*2.2)}px Arial`;
+        gx.textBaseline='middle'; gx.shadowBlur=0;
+        gx.fillText('🐭',hs.x,hs.y);
+      }
     }
     gx.restore();
   }
