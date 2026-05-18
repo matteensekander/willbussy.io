@@ -345,14 +345,15 @@ let orbs    = [];
 let pups    = [];
 let parts   = [];
 let popups  = [];
-let cam     = { x:0, y:0 };
-let mpos    = { x:0, y:0 };
+let cam       = { x:0, y:0 };
+let mpos      = { x:0, y:0 };
+let mouseMoved = false; // true only after the mouse actually moves
 let keys    = {};
 let spaceDown = false;
 let rafId, lastT = 0;
 
 // ─── INPUT ───────────────────────────────────────────────────
-gc.addEventListener('mousemove', e => { mpos.x = e.clientX; mpos.y = e.clientY; });
+gc.addEventListener('mousemove', e => { mpos.x = e.clientX; mpos.y = e.clientY; mouseMoved = true; });
 gc.addEventListener('mousedown', e => { if(e.button===0) spaceDown=true; });
 gc.addEventListener('mouseup',   e => { if(e.button===0) spaceDown=false; });
 const GAME_KEYS = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight','Space','ShiftLeft','ShiftRight']);
@@ -595,12 +596,16 @@ class Snake {
       if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
       if(keys['KeyS']||keys['ArrowDown'])  dy+=1;
       if(keys['KeyW']||keys['ArrowUp'])    dy-=1;
-      if(dx!==0||dy!==0) this.tAngle=Math.atan2(dy,dx);
-    } else {
-      // Mouse fallback
+      if(dx!==0||dy!==0){
+        this.tAngle=Math.atan2(dy,dx);
+        mouseMoved=false; // WASD takes over; ignore mouse until it moves again
+      }
+    } else if(mouseMoved){
+      // Mouse only steers if the cursor has actually been moved
       const dx=mpos.x-gc.width/2, dy=mpos.y-gc.height/2;
       if(Math.abs(dx)>4||Math.abs(dy)>4) this.tAngle=Math.atan2(dy,dx);
     }
+    // If neither: keep current tAngle — snake holds its heading
   }
 
   _aiSteer(){
