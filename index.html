@@ -390,10 +390,9 @@ class Snake {
     for(let i=0;i<22;i++) this.segs.push({x:x-Math.cos(this.angle)*i*SEG_GAP,y:y-Math.sin(this.angle)*i*SEG_GAP});
     if(!isPlayer){
       this.aiCD=0;
-      // hunter: actively intercepts player | aggressive: charges when close | patrol: eats food
-      const r=Math.random();
-      this.personality = r<0.35 ? 'hunter' : r<0.70 ? 'aggressive' : 'patrol';
-      this.chasing=false;
+      this.skill   = rnd(0.35, 1.0); // reaction quality, prediction accuracy
+      this.aiState = 'food';         // current intent: food | hunt | flee | dodge
+      this.chasing = false;
     }
     this._streakTimer=null;
     // Dash state
@@ -533,69 +532,81 @@ class Snake {
   _aiSteer(){
     const h=this.head;
 
-    // Hard border avoidance — always overrides everything
-    const M=200;
+    // ── Border avoidance (always immediate) ───────────────────
+    const M=180;
     if(h.x<M||h.x>WW-M||h.y<M||h.y>WH-M){
-      this.chasing=false;
-      this.tAngle=Math.atan2(WH/2-h.y,WW/2-h.x);
+      this.chasing=false; this.aiState='wander';
+      this.tAngle=Math.atan2(WH/2-h.y, WW/2-h.x);
       return;
     }
 
     this.aiCD--;
     if(this.aiCD>0) return;
-    this.aiCD = rint(14,32); // slower reaction — easier to kill
+    // Skilled bots react faster; less skilled react slower
+    this.aiCD=rint(~~(8+14*(1-this.skill)), ~~(18+22*(1-this.skill)));
 
-    const hasPlayer = player && player.alive;
-    const dp = hasPlayer ? dst(h,player.head) : Infinity;
+    // ── Scan nearby snakes ────────────────────────────────────
+    let threat=null, threatD=Infinity;  // bigger snake head nearby
+    let prey=null,   preyD=Infinity;    // smaller snake head to hunt
+    let dangerSeg=null, dangerD=Infinity; // any body segment too close
 
-    // ── Danger check: dodge nearby bodies ─────────────────────
-    // Hunters skip this when actively chasing — they're committed
-    // Also a 35% random chance to completely miss the dodge
-    const canDodge = this.personality!=='hunter' || !this.chasing;
-    let dodging=false;
-    if(canDodge && Math.random()>0.35){
-      for(const other of snakes){
-        if(!other.alive||other===this) continue;
-        for(let i=0;i<other.segs.length;i+=3){
-          if(dst(h,other.segs[i])<38){ // reduced from 55 → closer before they react
-            this.tAngle=Math.atan2(h.y-other.segs[i].y, h.x-other.segs[i].x)+rnd(-0.5,0.5);
-            dodging=true; break;
-          }
-        }
-        if(dodging) break;
+    for(const sn of snakes){
+      if(!sn.alive||sn===this) continue;
+      const dh=dst(h,sn.head);
+
+      // Bigger head = threat; run away
+      if(sn.len>this.len*1.05 && dh<260*this.skill+80){
+        if(dh<threatD){ threatD=dh; threat=sn; }
+      }
+      // Smaller head = prey; intercept to kill
+      if(sn.len<this.len*0.95 && dh<350*this.skill+100){
+        if(dh<preyD){ preyD=dh; prey=sn; }
+      }
+      // Body segments — dodge if too close
+      const step = Math.max(2, ~~(4*(1-this.skill*0.5)));
+      for(let i=0;i<sn.segs.length;i+=step){
+        const db=dst(h,sn.segs[i]);
+        if(db<dangerD){ dangerD=db; dangerSeg=sn.segs[i]; }
       }
     }
-    if(dodging){ this.chasing=false; return; }
 
-    // ── Personality: HUNTER ──────────────────────────────────
-    // Intercepts player by aiming at a predicted future position
-    if(this.personality==='hunter' && hasPlayer && dp<900){
-      this.chasing=true;
-      const lead=30; // frames ahead to predict
-      const predX=player.head.x+Math.cos(player.angle)*BASE_SPD*lead;
-      const predY=player.head.y+Math.sin(player.angle)*BASE_SPD*lead;
-      // If we're very close, aim directly at the head for the kill
-      const target = dp<200
-        ? player.head
-        : { x:predX, y:predY };
-      this.tAngle=Math.atan2(target.y-h.y, target.x-h.x);
+    // ── Priority 1: Flee from a bigger snake ──────────────────
+    if(threat && threatD<160){
+      this.chasing=false; this.aiState='flee';
+      // Run directly away; add slight random juke
+      this.tAngle=Math.atan2(h.y-threat.head.y, h.x-threat.head.x)+rnd(-0.3,0.3);
       return;
     }
 
-    // ── Personality: AGGRESSIVE ───────────────────────────────
-    // Charges directly at player when within range
-    if(this.personality==='aggressive' && hasPlayer && dp<500){
-      this.chasing=true;
-      this.tAngle=Math.atan2(player.head.y-h.y, player.head.x-h.x);
+    // ── Priority 2: Dodge nearby body segments ────────────────
+    const dodgeRange=30+22*this.skill;
+    if(dangerSeg && dangerD<dodgeRange && Math.random()<0.55+this.skill*0.3){
+      this.chasing=false; this.aiState='dodge';
+      this.tAngle=Math.atan2(h.y-dangerSeg.y, h.x-dangerSeg.x)+rnd(-0.4,0.4);
       return;
     }
 
-    // ── Default: seek nearest food ────────────────────────────
-    this.chasing=false;
+    // ── Priority 3: Hunt smaller snake (not just player) ──────
+    if(prey && preyD<300+this.skill*150){
+      this.chasing=true; this.aiState='hunt';
+      // Predict where prey is heading; lead shot scales with skill
+      const lead=~~(10+this.skill*25);
+      const predX=prey.head.x+Math.cos(prey.angle)*BASE_SPD*lead;
+      const predY=prey.head.y+Math.sin(prey.angle)*BASE_SPD*lead;
+      // Very close? go straight for the head; far? aim ahead
+      const target = preyD<130 ? prey.head : {x:predX, y:predY};
+      // Add imprecision for lower-skill bots
+      const err=(1-this.skill)*0.6;
+      this.tAngle=Math.atan2(target.y-h.y, target.x-h.x)+rnd(-err,err);
+      return;
+    }
+
+    // ── Priority 4: Eat food ──────────────────────────────────
+    this.chasing=false; this.aiState='food';
     let near=null, nd=Infinity;
     for(const o of orbs){ const d=dst(h,o); if(d<nd){nd=d;near=o;} }
-    if(near && nd<700) this.tAngle=Math.atan2(near.y-h.y, near.x-h.x);
-    else this.tAngle+=rnd(-0.7,0.7);
+    if(near && nd<650) this.tAngle=Math.atan2(near.y-h.y, near.x-h.x);
+    else{ this.tAngle+=rnd(-0.6,0.6); }
   }
 
   die(){
