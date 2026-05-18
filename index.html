@@ -5,121 +5,179 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>willbussy.io</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #000; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
+body { background: #06070d; overflow: hidden; font-family: 'Inter', 'Segoe UI', sans-serif; }
 #gameCanvas { display: block; cursor: default; }
+
+/* ── HUD ── */
 #minimapCanvas {
   position: fixed; bottom: 20px; right: 20px;
-  border: 2px solid rgba(255,255,255,0.25); border-radius: 8px;
-  background: rgba(0,0,0,0.6); display: none;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+  background: rgba(0,0,0,0.5); display: none;
 }
 #hud {
-  position: fixed; top: 14px; left: 14px;
-  color: #fff; font-size: 15px; display: none;
-  text-shadow: 0 0 8px rgba(0,255,255,0.7); line-height: 1.85;
-  pointer-events: none; z-index: 50;
+  position: fixed; top: 16px; left: 16px; color: #fff; font-size: 14px;
+  display: none; line-height: 1.9; pointer-events: none; z-index: 50;
+  text-shadow: 0 0 10px rgba(0,255,200,0.5);
 }
-#hud span { color: #00ffcc; font-weight: bold; }
-#dashStatus { font-size: 13px; margin-top: 2px; font-weight: bold; letter-spacing: 0.5px; }
+#hud span { color: #00ffcc; font-weight: 700; }
+#dashStatus { font-size: 12px; margin-top: 3px; font-weight: 600; letter-spacing: 0.4px; }
 #leaderboard {
-  position: fixed; top: 14px; right: 14px;
-  background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 10px; padding: 10px 14px; color: #fff;
-  font-size: 13px; min-width: 170px; display: none;
-  pointer-events: none; z-index: 50;
+  position: fixed; top: 16px; right: 16px;
+  background: rgba(6,7,13,0.8); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 10px 14px; color: #fff;
+  font-size: 13px; min-width: 165px; display: none;
+  pointer-events: none; z-index: 50; backdrop-filter: blur(12px);
 }
-#leaderboard .lb-title { font-weight: bold; font-size: 14px; margin-bottom: 6px; color: #ffcc00; }
-#overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.88); display: flex;
-  align-items: center; justify-content: center; z-index: 100;
-  overflow-y: auto;
-}
-.screen { text-align: center; color: #fff; max-width: 500px; padding: 24px 10px; }
-#titleScreen .game-title {
-  font-size: 68px; font-weight: 900;
-  font-family: 'Arial Black', 'Segoe UI Black', Arial, sans-serif;
-  background: linear-gradient(90deg, #00ffff, #ff00ff, #00ff88, #ffcc00);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 18px #00ffcc);
-  animation: titlePulse 2.5s ease-in-out infinite alternate;
-}
-@keyframes titlePulse {
-  from { filter: drop-shadow(0 0 10px #00ffcc); }
-  to   { filter: drop-shadow(0 0 30px #ff00ff); }
-}
-.subtitle { color: #aaa; font-size: 17px; margin: 6px 0 18px; letter-spacing: 1px; }
-.skin-label { color: #bbb; font-size: 14px; margin-bottom: 12px; }
-.skins { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 18px; max-width: 440px; margin-left: auto; margin-right: auto; }
-.skin-opt {
-  width: 82px; height: 82px; border-radius: 14px; cursor: pointer;
-  border: 3px solid transparent; transition: all 0.25s;
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; font-size: 11px; font-weight: bold;
-  letter-spacing: 1px; pointer-events: all;
-}
-.skin-opt:hover { transform: scale(1.06); }
-.skin-opt.sel { border-color: #fff; transform: scale(1.1); }
-#playerNameInput {
-  padding: 10px 20px; font-size: 16px; border-radius: 22px;
-  border: 2px solid #333; background: #111; color: #fff;
-  outline: none; text-align: center; width: 220px;
-  pointer-events: all; margin-bottom: 6px;
-}
-#playerNameInput:focus { border-color: #00ffcc; }
-.btn {
-  display: inline-block; padding: 13px 42px; font-size: 19px; font-weight: bold;
-  border: none; border-radius: 30px; cursor: pointer; pointer-events: all;
-  transition: all 0.2s; margin-top: 14px;
-}
-.btn:hover { transform: scale(1.07); }
-.play-btn  { background: linear-gradient(135deg, #00aaff, #00ffaa); color: #000; }
-.again-btn { background: linear-gradient(135deg, #ff4444, #ff8800); color: #fff; }
-.controls-hint { margin-top: 14px; color: #555; font-size: 12px; line-height: 1.8; }
-/* ── High Score Table ── */
-#hsSection {
-  margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px;
-}
-#hsSection .hs-title {
-  color: #ffcc00; font-weight: bold; font-size: 15px; margin-bottom: 10px;
-}
-#hsTable { width: 100%; border-collapse: collapse; font-size: 13px; }
-#hsTable th {
-  color: #888; font-weight: normal; padding: 3px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;
-}
-#hsTable td { padding: 4px 8px; color: #ccc; }
-#hsTable tr:first-child td { color: #ffcc00; }
-#hsTable tr:nth-child(2) td { color: #c0c0c0; }
-#hsTable tr:nth-child(3) td { color: #cd7f32; }
-.hs-empty { color: #444; font-size: 13px; margin: 8px 0; }
-/* ── Death screen ── */
-#deathScreen { display: none; }
-#deathScreen .death-title {
-  font-size: 56px; font-weight: 900; font-family: 'Arial Black', Arial;
-  color: #ff3333; text-shadow: 0 0 24px #ff0000; margin-bottom: 18px;
-}
-.death-stats { font-size: 17px; color: #ccc; line-height: 2.2; margin-bottom: 8px; }
-.death-stats b { color: #ffcc00; }
-#newHSBanner {
-  font-size: 26px; font-weight: 900; color: #ffcc00;
-  text-shadow: 0 0 20px #ff8800; margin: 10px 0; display: none;
-  animation: hsFlash 0.6s ease-in-out infinite alternate;
-}
-@keyframes hsFlash { from { opacity:1; } to { opacity:0.4; } }
-#deathRank { font-size: 15px; color: #aaa; margin: 6px 0 14px; }
-/* ── Power-up chips ── */
+#leaderboard .lb-title { font-weight: 700; font-size: 13px; margin-bottom: 7px; color: #ffcc00; letter-spacing: 0.5px; }
 #powerupBar {
   position: fixed; bottom: 18px; left: 18px;
-  display: flex; gap: 10px; pointer-events: none; z-index: 50; display: none;
+  display: flex; gap: 8px; pointer-events: none; z-index: 50; display: none;
 }
 .pu-chip {
-  background: rgba(0,0,0,0.75); border-radius: 10px; padding: 6px 10px;
+  background: rgba(0,0,0,0.8); border-radius: 10px; padding: 6px 10px;
   display: flex; flex-direction: column; align-items: center;
-  font-size: 18px; border: 2px solid; color: #fff; min-width: 44px;
+  font-size: 17px; border: 1.5px solid; color: #fff; min-width: 42px;
 }
-.pu-chip small { font-size: 9px; margin-top: 2px; }
+.pu-chip small { font-size: 9px; margin-top: 2px; opacity: 0.8; }
+
+/* ── Overlay (title + death) ── */
+#overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+  overflow-y: auto; padding: 20px 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,200,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(180,0,255,0.06) 0%, transparent 70%),
+    #06070d;
+}
+
+/* ── Shared card ── */
+.screen {
+  text-align: center; color: #fff; width: 100%; max-width: 460px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px; padding: 28px 28px 24px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 0 60px rgba(0,200,255,0.05), 0 24px 64px rgba(0,0,0,0.5);
+}
+
+/* ── Title ── */
+.game-title {
+  font-size: 46px; font-weight: 900; letter-spacing: -1px;
+  font-family: 'Inter', 'Arial Black', sans-serif;
+  background: linear-gradient(100deg, #00e5ff 0%, #bf5fff 45%, #00ffaa 80%, #ffd740 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  filter: drop-shadow(0 0 14px rgba(0,220,255,0.35));
+  animation: titlePulse 3s ease-in-out infinite alternate;
+  line-height: 1.1; margin-bottom: 4px;
+}
+@keyframes titlePulse {
+  from { filter: drop-shadow(0 0 8px rgba(0,220,255,0.3)); }
+  to   { filter: drop-shadow(0 0 22px rgba(180,80,255,0.45)); }
+}
+.subtitle {
+  color: rgba(255,255,255,0.35); font-size: 12px; letter-spacing: 3px;
+  text-transform: uppercase; margin-bottom: 14px; font-weight: 400;
+}
+
+/* ── Logo canvas ── */
+#logoCanvas { display: block; margin: 0 auto 16px; border-radius: 8px; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0; }
+
+/* ── Skin selector ── */
+.skin-label { color: rgba(255,255,255,0.4); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.skins {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+  margin-bottom: 16px;
+}
+.skin-opt {
+  border-radius: 12px; cursor: pointer; border: 1.5px solid transparent;
+  transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 10px 0; gap: 4px; pointer-events: all;
+}
+.skin-opt:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.3); }
+.skin-opt.sel { border-color: #fff; box-shadow: 0 0 14px rgba(255,255,255,0.2); transform: translateY(-2px); }
+
+/* ── Name + Play row ── */
+.play-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+#playerNameInput {
+  flex: 1; padding: 11px 16px; font-size: 14px; border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+  color: #fff; outline: none; font-family: inherit;
+  transition: border-color 0.2s; pointer-events: all;
+}
+#playerNameInput::placeholder { color: rgba(255,255,255,0.25); }
+#playerNameInput:focus { border-color: rgba(0,220,255,0.5); background: rgba(0,220,255,0.04); }
+.play-btn {
+  padding: 11px 26px; font-size: 15px; font-weight: 800; border: none;
+  border-radius: 12px; cursor: pointer; pointer-events: all;
+  background: linear-gradient(135deg, #00c8ff, #00ffaa); color: #000;
+  letter-spacing: 0.5px; transition: all 0.2s; white-space: nowrap;
+  box-shadow: 0 0 20px rgba(0,200,255,0.25);
+}
+.play-btn:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(0,200,255,0.4); }
+
+/* ── Controls hint ── */
+.controls-hint {
+  color: rgba(255,255,255,0.2); font-size: 11px; letter-spacing: 0.3px;
+  line-height: 1.7;
+}
+.controls-hint kbd {
+  background: rgba(255,255,255,0.08); border-radius: 4px;
+  padding: 1px 5px; font-family: monospace; font-size: 11px; color: rgba(255,255,255,0.4);
+}
+
+/* ── High scores (title page) ── */
+#hsSection { margin-top: 14px; }
+#hsSummary {
+  display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
+  font-size: 12px; color: rgba(255,255,255,0.35); cursor: pointer;
+}
+#hsSummary span { white-space: nowrap; }
+#hsSummary span:first-child { color: #ffd740; }
+#hsSummary span:nth-child(2) { color: #c0c0c0; }
+#hsSummary span:nth-child(3) { color: #cd7f32; }
+#hsExpandBtn {
+  display: block; margin: 8px auto 0; font-size: 11px; color: rgba(255,255,255,0.2);
+  cursor: pointer; background: none; border: none; pointer-events: all;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+#hsExpandBtn:hover { color: rgba(255,255,255,0.4); }
+#hsFull { display: none; margin-top: 12px; }
+#hsTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+#hsTable th { color: rgba(255,255,255,0.25); font-weight: 500; padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.07); text-align: left; }
+#hsTable td { padding: 4px 6px; color: rgba(255,255,255,0.55); }
+#hsTable tr:first-child td { color: #ffd740; }
+#hsTable tr:nth-child(2) td { color: #c0c0c0; }
+#hsTable tr:nth-child(3) td { color: #cd7f32; }
+.hs-empty { color: rgba(255,255,255,0.2); font-size: 12px; padding: 6px 0; }
+
+/* ── Death screen ── */
+#deathScreen { display: none; }
+.death-title {
+  font-size: 44px; font-weight: 900; letter-spacing: -1px;
+  color: #ff3344; text-shadow: 0 0 30px rgba(255,30,50,0.6); margin-bottom: 16px;
+}
+.death-stats { font-size: 15px; color: rgba(255,255,255,0.5); line-height: 2.2; margin-bottom: 8px; }
+.death-stats b { color: #ffcc00; font-weight: 700; }
+#newHSBanner {
+  font-size: 20px; font-weight: 800; color: #ffd740; letter-spacing: 1px;
+  margin: 8px 0; display: none; animation: hsFlash 0.7s ease-in-out infinite alternate;
+}
+@keyframes hsFlash { from { opacity:1; } to { opacity:0.35; } }
+#deathRank { font-size: 13px; color: rgba(255,255,255,0.3); margin: 4px 0 12px; }
+.again-btn {
+  display: inline-block; padding: 12px 36px; font-size: 16px; font-weight: 800;
+  border: none; border-radius: 12px; cursor: pointer; pointer-events: all;
+  background: linear-gradient(135deg, #ff3344, #ff7700); color: #fff;
+  transition: all 0.2s; margin-top: 16px; letter-spacing: 0.5px;
+}
+.again-btn:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(255,60,60,0.35); }
 </style>
 </head>
 <body>
@@ -142,38 +200,40 @@ body { background: #000; overflow: hidden; font-family: 'Segoe UI', Arial, sans-
   <!-- Title screen -->
   <div id="titleScreen" class="screen">
     <div class="game-title">willbussy.io</div>
-    <div class="subtitle">🐍 Slither. Grow. Dominate. 🐍</div>
-    <canvas id="logoCanvas" width="380" height="54" style="margin-bottom:14px;"></canvas>
-    <div class="skin-label">Choose your skin:</div>
+    <div class="subtitle">slither &nbsp;·&nbsp; grow &nbsp;·&nbsp; dominate</div>
+    <canvas id="logoCanvas" width="340" height="44"></canvas>
+    <hr class="divider">
+    <div class="skin-label">Choose your skin</div>
     <div class="skins" id="skinSelector"></div>
-    <input id="playerNameInput" type="text" placeholder="Enter your name" maxlength="15"><br>
-    <button class="btn play-btn" onclick="startGame()">PLAY</button>
-    <div class="controls-hint">
-      WASD / Arrow keys → move &nbsp;|&nbsp; Space → boost (shrinks)<br>
-      Shift → DASH (unlocks at length 50) &nbsp;|&nbsp; Collect power-ups ⚡👻🧲
+    <hr class="divider">
+    <div class="play-row">
+      <input id="playerNameInput" type="text" placeholder="Your name" maxlength="15">
+      <button class="play-btn" onclick="startGame()">PLAY</button>
     </div>
-    <!-- High score table -->
+    <div class="controls-hint">
+      <kbd>WASD</kbd> / mouse move &nbsp;·&nbsp; <kbd>click</kbd> or <kbd>space</kbd> boost &nbsp;·&nbsp; <kbd>shift</kbd> dash at 50+
+    </div>
     <div id="hsSection">
-      <div class="hs-title">🏅 High Scores</div>
-      <div id="hsTitleContent"></div>
+      <hr class="divider" style="margin-top:14px;">
+      <div id="hsSummary"></div>
+      <button id="hsExpandBtn" onclick="toggleHsFull()">▾ all scores</button>
+      <div id="hsFull"><div id="hsTitleContent"></div></div>
     </div>
   </div>
 
   <!-- Death screen -->
   <div id="deathScreen" class="screen">
     <div class="death-title">YOU DIED</div>
-    <div id="newHSBanner">🏆 NEW HIGH SCORE! 🏆</div>
+    <div id="newHSBanner">🏆 NEW HIGH SCORE</div>
     <div class="death-stats">
-      Final Score: <b id="dScore">0</b><br>
-      Snake Length: <b id="dLength">0</b><br>
-      Snakes Slurped: <b id="dKills">0</b>
+      Score: <b id="dScore">0</b> &nbsp;·&nbsp;
+      Length: <b id="dLength">0</b> &nbsp;·&nbsp;
+      Slurped: <b id="dKills">0</b>
     </div>
     <div id="deathRank"></div>
-    <div id="hsSection2" style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:12px;">
-      <div style="color:#ffcc00;font-weight:bold;font-size:14px;margin-bottom:8px;">🏅 High Scores</div>
-      <div id="hsDeathContent"></div>
-    </div>
-    <button class="btn again-btn" onclick="resetGame()">PLAY AGAIN</button>
+    <hr class="divider">
+    <div id="hsDeathContent"></div>
+    <button class="again-btn" onclick="resetGame()">PLAY AGAIN</button>
   </div>
 </div>
 
@@ -248,6 +308,20 @@ function saveHS(name, score, length, kills){
   const top = list.slice(0,10);
   localStorage.setItem(HS_KEY, JSON.stringify(top));
   return top.findIndex(e=>e.score===score && e.name===name);
+}
+let hsFulOpen = false;
+function toggleHsFull(){
+  hsFulOpen=!hsFulOpen;
+  document.getElementById('hsFull').style.display=hsFulOpen?'block':'none';
+  document.getElementById('hsExpandBtn').textContent=hsFulOpen?'▴ hide':'▾ all scores';
+}
+function renderHSSummary(){
+  const list=getHS();
+  const medals=['🥇','🥈','🥉'];
+  const sum=document.getElementById('hsSummary');
+  if(!sum) return;
+  if(!list.length){ sum.innerHTML='<span style="color:rgba(255,255,255,0.2);font-size:12px;">No scores yet</span>'; return; }
+  sum.innerHTML=list.slice(0,3).map((e,i)=>`<span>${medals[i]} ${e.name} — ${e.score}</span>`).join('');
 }
 function renderHSTable(containerId){
   const list = getHS();
@@ -911,6 +985,7 @@ function showDeath(){
   }
 
   renderHSTable('hsDeathContent');
+  renderHSSummary();
 }
 
 function resetGame(){
@@ -925,6 +1000,7 @@ function resetGame(){
   player=null; snakes=[];
   renderSkinSelector();
   renderHSTable('hsTitleContent');
+  renderHSSummary();
 }
 
 // ─── LOGO ANIMATION ──────────────────────────────────────────
@@ -934,10 +1010,10 @@ function resetGame(){
   let t=0;
   function frame(){
     lx.clearRect(0,0,lc.width,lc.height);
-    const N=20;
+    const N=18;
     const sk=SKINS[selSkin]; // live-update to whichever skin is selected
     for(let i=N-1;i>=0;i--){
-      const x=16+i*18, y=27+Math.sin(i*0.42+t)*16;
+      const x=14+i*17, y=22+Math.sin(i*0.44+t)*13;
       const progress=i/(N-1);
       const ci=Math.floor(progress*(sk.grad.length-1));
       const ni=Math.min(ci+1,sk.grad.length-1);
