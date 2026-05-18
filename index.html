@@ -183,6 +183,7 @@ body { background: #06070d; overflow: hidden; font-family: 'Inter', 'Segoe UI', 
 <body>
 <canvas id="gameCanvas"></canvas>
 <img id="ogreImg" src="ogre.jpg" style="display:none;">
+<img id="rattkImg" src="rattk.jpg" style="display:none;">
 <canvas id="minimapCanvas" width="150" height="150"></canvas>
 
 <div id="hud">
@@ -271,7 +272,7 @@ const SKINS = {
   ocean:  { grad:['#0077ff','#00aaff','#00ffee'], glow:'#00aaff', icon:'🌊', label:'OCEAN',  bg:'linear-gradient(135deg,#001122,#002244)' },
   venom:  { grad:['#44ff00','#aaff00','#ffff00'], glow:'#66ff00', icon:'☠️', label:'VENOM',  bg:'linear-gradient(135deg,#001100,#003300)' },
   ice:    { grad:['#aaeeff','#66ddff','#ffffff'], glow:'#88eeff', icon:'❄️', label:'ICE',    bg:'linear-gradient(135deg,#001133,#003355)' },
-  rattk:  { grad:['#7a7060','#5c5048','#a09080'], glow:'#ffaabb', icon:'🐭', label:'RATT K',  bg:'linear-gradient(135deg,#1a1510,#2a2018)' },
+  rattk:  { grad:['#7a7060','#5c5048','#a09080'], glow:'#ffaabb', icon:'img:rattk.jpg', label:'RATT K',  bg:'linear-gradient(135deg,#1a1510,#2a2018)' },
   shadow: { grad:['#440088','#8800cc','#cc44ff'], glow:'#9900ff', icon:'🌑', label:'SHADOW', bg:'linear-gradient(135deg,#0a0011,#150022)' },
 };
 const AI_NAMES = ['SlimeyBoi','SnekMaster','CoilKing','WormGod','SerpentPro','NoodleLord','ViperrX','ScaleGod','TailWhip','BoaFlex','CobrazZ','AnacondaX','SsssSlayer','VenomByte','ToxicCoil','RingWorm69','NoodleArms','SlitherKing','LengthGang','Ouroboros'];
@@ -768,11 +769,14 @@ class Snake {
         gx.arc(hs.x+Math.cos(ea1)*eo+0.8,hs.y+Math.sin(ea1)*eo+0.8,1.6,0,Math.PI*2);
         gx.arc(hs.x+Math.cos(ea2)*eo+0.8,hs.y+Math.sin(ea2)*eo+0.8,1.6,0,Math.PI*2);
         gx.fill();
-        // Rat face
+        // Rat face photo
         if(this.skin==='rattk'){
-          gx.font=`${~~(SEG_R*2.2)}px Arial`;
-          gx.textAlign='center'; gx.textBaseline='middle';
-          gx.fillText('🐭',hs.x,hs.y);
+          const rimg=document.getElementById('rattkImg');
+          const hr=SEG_R*1.35;
+          gx.save();
+          gx.beginPath(); gx.arc(hs.x,hs.y,hr,0,Math.PI*2); gx.clip();
+          gx.drawImage(rimg,hs.x-hr,hs.y-hr,hr*2,hr*2);
+          gx.restore();
         }
       }
 
